@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>EDEKA Service Health Monitor</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #005CA9 0%, #003d6b 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { 
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #FFED00;
+        }
+        
+        h1 { 
+            color: #005CA9;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: #58595B;
+            font-size: 1.1em;
+        }
+        
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #FFED00;
+        }
+        
+        .info-box p {
+            color: #58595B;
+            line-height: 1.6;
+        }
+        
+        button { 
+            background: #FFED00;
+            color: #005CA9;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 0 auto 30px;
+        }
+        
+        button:hover { 
+            background: #005CA9;
+            color: #FFED00;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 92, 169, 0.3);
+        }
+        
+        #results { 
+            margin-top: 20px;
+        }
+        
+        .service { 
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .service:hover {
+            transform: translateX(5px);
+        }
+        
+        .UP { 
+            background: #d4edda;
+            border-left: 5px solid #28a745;
+        }
+        
+        .DOWN { 
+            background: #f8d7da;
+            border-left: 5px solid #dc3545;
+        }
+        
+        .service-info {
+            flex-grow: 1;
+        }
+        
+        .service-name {
+            font-weight: bold;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .service-meta {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .service-status {
+            text-align: right;
+            min-width: 100px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        
+        .UP .status-badge {
+            background: #28a745;
+            color: white;
+        }
+        
+        .DOWN .status-badge {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .response-time {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #005CA9;
+            font-size: 1.1em;
+        }
+        
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+            color: #58595B;
+            font-size: 0.9em;
+        }
+        
+        .tech-stack {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .tech-badge {
+            background: #005CA9;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>EDEKA Service Monitor</h1>
+            <p class="subtitle">Cloud-basierte Überwachung der EDEKA-Dienste</p>
+        </div>
+        
+        <div class="info-box">
+            <p>
+                <strong>Funktionsweise:</strong> Diese Anwendung überwacht die Verfügbarkeit verschiedener 
+                EDEKA-Services in Echtzeit und loggt alle Prüfungen in Azure Blob Storage. 
+                Entwickelt als Demo für Cloud-Infrastructure-Monitoring.
+            </p>
+        </div>
+        
+        <button onclick="checkHealth()">Status prüfen</button>
+        
+        <div id="results"></div>
+        
+        <div class="footer">
+            <p><strong>Tech Stack:</strong></p>
+            <div class="tech-stack">
+                <span class="tech-badge">Python Flask</span>
+                <span class="tech-badge">Azure Kubernetes (AKS)</span>
+                <span class="tech-badge">Azure Blob Storage</span>
+                <span class="tech-badge">Docker</span>
+                <span class="tech-badge">Terraform</span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let lastCheckTime = null;
+        
+        async function checkHealth() {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!resultsDiv.innerHTML || resultsDiv.innerHTML.includes('Lade...')) {
+                resultsDiv.innerHTML = '<div class="loading">Services werden überprüft</div>';
+            }
+            
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                
+                resultsDiv.innerHTML = data.map(service => `
+                    <div class="service ${service.status}">
+                        <div class="service-info">
+                            <div class="service-name">${service.name}</div>
+                            <div class="service-meta">
+                                Kategorie: ${service.category} | 
+                                Geprüft: ${new Date(service.timestamp).toLocaleTimeString('de-DE')}
+                            </div>
+                        </div>
+                        <div class="service-status">
+                            <span class="status-badge">${service.status}</span>
+                            ${service.response_time > 0 ? `<div class="response-time">${service.response_time}ms</div>` : ''}
+                        </div>
+                    </div>
+                `).join('');
+                
+                lastCheckTime = new Date();
+            } catch (error) {
+                resultsDiv.innerHTML = '<div class="service DOWN"><div class="service-info"><div class="service-name">Fehler beim Laden der Daten</div></div></div>';
+            }
+        }
+        window.onload = checkHealth;
+    </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: health-checker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: health-checker
+  template:
+    metadata:
+      labels:
+        app: health-checker
+    spec:
+      containers:
+      - name: health-checker
+        image: acrhealthcheckerfp2905.azurecr.io/health-checker:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: AZURE_STORAGE_CONNECTION_STRING
+          valueFrom:
+            secretKeyRef:
+              name: azure-storage
+              key: connection-string
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: health-checker-service
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 80
+    targetPort: 8080
+  selector:
+    app: health-checker
