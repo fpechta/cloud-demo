@@ -1,0 +1,50 @@
+name: Build and Deploy to AKS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  ACR_NAME: ${{ secrets.ACR_NAME }}
+  AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
+  AKS_RESOURCE_GROUP: ${{ secrets.AKS_RESOURCE_GROUP }}
+  IMAGE_NAME: health-checker
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: Get commit SHA
+      id: vars
+      run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+    - name: Build and push to ACR
+      run: |
+        az acr build \
+          --registry ${{ env.ACR_NAME }} \
+          --image ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} \
+          --image ${{ env.IMAGE_NAME }}:latest \
+          --file Dockerfile \
+          .
+    - name: Get AKS credentials
+      run: |
+        az aks get-credentials \
+          --resource-group ${{ env.AKS_RESOURCE_GROUP }} \
+          --name ${{ env.AKS_CLUSTER_NAME }} \
+          --overwrite-existing
+    - name: Deploy to AKS
+      run: |
+        kubectl set image deployment/health-checker \
+          health-checker=${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
+        kubectl rollout status deployment/health-checker --timeout=5m
+    - name: Verify deployment
+      run: |
+        kubectl get pods -l app=health-checker
+        kubectl get service health-checker-service
