@@ -15,35 +15,49 @@ env:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+    
     - name: Azure Login
       uses: azure/login@v1
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
     - name: Get commit SHA
       id: vars
       run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
-    - name: Build and push to ACR
+    
+    - name: Login to ACR
       run: |
-        az acr build \
-          --registry ${{ env.ACR_NAME }} \
-          --image ${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} \
-          --image ${{ env.IMAGE_NAME }}:latest \
-          --file Dockerfile \
-          .
+        az acr login --name ${{ env.ACR_NAME }}
+    
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} .
+        docker tag ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }} \
+                   ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+    
+    - name: Push to ACR
+      run: |
+        docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
+        docker push ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest
+    
     - name: Get AKS credentials
       run: |
         az aks get-credentials \
           --resource-group ${{ env.AKS_RESOURCE_GROUP }} \
           --name ${{ env.AKS_CLUSTER_NAME }} \
           --overwrite-existing
+    
     - name: Deploy to AKS
       run: |
         kubectl set image deployment/health-checker \
           health-checker=${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ steps.vars.outputs.sha_short }}
+        
         kubectl rollout status deployment/health-checker --timeout=5m
+    
     - name: Verify deployment
       run: |
         kubectl get pods -l app=health-checker
