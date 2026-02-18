@@ -194,6 +194,11 @@
             border-radius: 15px;
             font-size: 0.85em;
         }
+        
+        .service-name a:hover {
+            color: #005CA9;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -244,7 +249,12 @@
                 resultsDiv.innerHTML = data.map(service => `
                     <div class="service ${service.status}">
                         <div class="service-info">
-                            <div class="service-name">${service.name}</div>
+                            <div class="service-name">
+                                <a href="${service.url}" target="_blank" rel="noopener noreferrer" 
+                                style="color: #333; text-decoration: none;">
+                                    ${service.name}
+                                </a>
+                            </div>
                             <div class="service-meta">
                                 Kategorie: ${service.category} | 
                                 Geprüft: ${new Date(service.timestamp).toLocaleTimeString('de-DE')}

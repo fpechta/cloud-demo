@@ -54,7 +54,8 @@ def health():
             "category": service['category'],
             "status": status,
             "response_time": response_time,
-            "timestamp": datetime.datetime.now().isoformat()
+            "timestamp": datetime.datetime.now().isoformat(),
+            "url": service['url']
         })
     
     # Log zu Azure Blob Storage
